@@ -1,6 +1,7 @@
 """A tiny CLI that lists GitHub profile achievements and how to earn them."""
 
 import argparse
+import json
 
 # Each entry: slug, display name, requirement, tier thresholds, solo-obtainable
 ACHIEVEMENTS = [
@@ -48,6 +49,8 @@ def main():
     parser.add_argument("--name", help="show only the achievement with this slug")
     parser.add_argument("--solo", action="store_true",
                         help="show only achievements you can earn on your own")
+    parser.add_argument("--json", action="store_true",
+                        help="emit machine-readable JSON instead of text")
     args = parser.parse_args()
 
     entries = ACHIEVEMENTS
@@ -57,6 +60,15 @@ def main():
         entries = [e for e in entries if e[0] == args.name]
         if not entries:
             parser.error(f"unknown achievement: {args.name}")
+
+    if args.json:
+        payload = [
+            {"slug": slug, "name": name, "requirement": requirement,
+             "tiers": tiers, "solo": solo}
+            for slug, name, requirement, tiers, solo in entries
+        ]
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return
 
     for entry in entries:
         print(render(entry))
